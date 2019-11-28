@@ -7,20 +7,46 @@ function task(config) {
       distDir: 'dist',
       filesPattern: './**/*.{js,ts,json,css,scss,html,md,yaml}'
     })
-        .values();
+    .values();
 
   let pkg = packageJson();
-  const packages = [];
 
-  // TODO: abort if prettier is already installed
+  if (!pkg.exists()) {
+    throw new Error('No package.json');
+  }
 
+  if (pkg.get().devDependencies.prettier || pkg.get().dependencies.prettier) {
+    throw new Error('Prettier is already installed');
+  }
 
   /**
-   * Add prettier to project
+   * Install required packages
    */
-  packages.push('prettier');
+  install([
+    'prettier',
+    'lint-staged',
+    'husky',
+    'tslint-config-prettier',
+    'tslint-plugin-prettier'
+  ]);
 
-  // Define Prettier config
+  // Fix Prettier to specific version (manual upgrading and
+  // re-formating is required)
+  pkg = packageJson();
+  const pkgContents = pkg.get();
+  pkgContents.devDependencies.prettier = pkgContents.devDependencies.prettier.replace(/[\^~]/, '');
+  pkg.save();
+
+  /**
+   * Add NPM scripts
+   */
+  pkg
+    .setScript('format', `prettier --write "${filesPattern}"`)
+    .setScript('lint:format', `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`);
+
+  /**
+   * Configure Prettier
+   */
   json('.prettierrc')
     .set({
       overrides: [
@@ -34,27 +60,21 @@ function task(config) {
     })
     .save();
 
-  // Define Prettier ignores
   lines('.prettierignore')
     .add([distDir])
     .save();
-
-  // Add format script
-  pkg.setScript('format', `prettier --write "${filesPattern}"`)
 
 
   /**
    * Deactivate style linting
    */
-  packages.push('tslint-config-prettier')
   // TODO: extend tslint config with 'tslint-config-prettier' ruleset
   // TODO: remove style-rules from tslint config (tslint-config-prettier-check)
 
 
   /**
-   * Add pre-commit hook
+   * Configure pre-commit hook
    */
-  // TODO: install lint-staged & husky
   // TODO: add husky config for pre-commit hook
   // TODO: add lint staged configuration
 
@@ -62,9 +82,6 @@ function task(config) {
   /**
    * Format linting for CI
    */
-  packages.push('tslint-plugin-prettier')
-
-  // Create separate tslint config for format linting
   json('tslint-prettier.json')
     .set({
       extends: ['tslint-plugin-prettier'],
@@ -74,22 +91,12 @@ function task(config) {
     })
     .save();
 
-  // Add format linting script
-  pkg.setScript('lint:format', `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`);
-
 
   /**
    * Final tasks
    */
-  // Apply changes to package.json and install packages
   pkg.save();
-  install(packages);
 
-  // Fix Prettier to specific version
-  pkg = packageJson();
-  const pkgContents = pkg.get();
-  pkgContents.devDependencies.prettier = pkgContents.devDependencies.prettier.replace(/[\^~]/, '');
-  pkg.save();
 
 
   // TODO: ask user if `npm run format` should be executed
