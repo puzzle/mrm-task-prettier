@@ -29,12 +29,11 @@ function task(config) {
     'tslint-config-prettier',
     'tslint-plugin-prettier'
   ]);
+  pkg = packageJson(); // Re-read updated package.json
 
   // Fix Prettier to specific version (manual upgrading and
   // re-formating is required)
-  pkg = packageJson();
-  const pkgContents = pkg.get();
-  pkgContents.devDependencies.prettier = pkgContents.devDependencies.prettier.replace(/[\^~]/, '');
+  pkg.get().devDependencies.prettier = pkg.get().devDependencies.prettier.replace(/[\^~]/, '');
   pkg.save();
 
   /**
@@ -64,20 +63,26 @@ function task(config) {
     .add([distDir])
     .save();
 
-
   /**
    * Deactivate style linting
    */
   // TODO: extend tslint config with 'tslint-config-prettier' ruleset
   // TODO: remove style-rules from tslint config (tslint-config-prettier-check)
 
-
   /**
    * Configure pre-commit hook
    */
-  // TODO: add husky config for pre-commit hook
-  // TODO: add lint staged configuration
-
+  pkg.get().husky = {
+     hooks: {
+         'pre-commit': 'lint-staged'
+     }
+  };
+  pkg.get()['lint-staged'] = {
+    [filesPattern]: [
+      "prettier --write",
+      "git add"
+    ]
+  };
 
   /**
    * Format linting for CI
@@ -91,13 +96,10 @@ function task(config) {
     })
     .save();
 
-
   /**
    * Final tasks
    */
   pkg.save();
-
-
 
   // TODO: ask user if `npm run format` should be executed
 
