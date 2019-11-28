@@ -1,0 +1,14 @@
+{
+  "name": "@puzzle/mrm-task-prettier",
+  "version": "1.0.0",
+  "description": "A mrm task that adds Prettier to a project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Mathis Hofer <hofer@puzzle.ch>",
+  "license": "MIT",
+  "dependencies": {
+    "mrm-core": "^4.0.0"
+  }
+}
