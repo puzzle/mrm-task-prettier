@@ -9,29 +9,47 @@ function task(config) {
     })
         .values();
 
-  const pkg = packageJson();
+  let pkg = packageJson();
+  const packages = [];
 
   // TODO: abort if prettier is already installed
+
 
   /**
    * Add prettier to project
    */
-  // TODO: install exact version of prettier
-  // TODO: add prettier config (.prettierrc or package.json?)
+  packages.push('prettier');
+
+  // Define Prettier config
+  json('.prettierrc')
+    .set({
+      overrides: [
+        {
+          files: '*.{js,ts,component.html}',
+          options: {
+            singleQuote: true
+          }
+        }
+      ]
+    })
+    .save();
 
   // Define Prettier ignores
   lines('.prettierignore')
     .add([distDir])
     .save();
 
+  // Add format script
   pkg.setScript('format', `prettier --write "${filesPattern}"`)
+
 
   /**
    * Deactivate style linting
    */
-  // TODO: install tslint-config-prettier
+  packages.push('tslint-config-prettier')
   // TODO: extend tslint config with 'tslint-config-prettier' ruleset
   // TODO: remove style-rules from tslint config (tslint-config-prettier-check)
+
 
   /**
    * Add pre-commit hook
@@ -40,10 +58,11 @@ function task(config) {
   // TODO: add husky config for pre-commit hook
   // TODO: add lint staged configuration
 
+
   /**
    * Format linting for CI
    */
-  // TODO: install tslint-plugin-prettier
+  packages.push('tslint-plugin-prettier')
 
   // Create separate tslint config for format linting
   json('tslint-prettier.json')
@@ -55,18 +74,29 @@ function task(config) {
     })
     .save();
 
-  // Add format linting task
+  // Add format linting script
   pkg.setScript('lint:format', `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`);
 
 
+  /**
+   * Final tasks
+   */
   // Apply changes to package.json and install packages
   pkg.save();
-  // install(packages);
+  install(packages);
+
+  // Fix Prettier to specific version
+  pkg = packageJson();
+  const pkgContents = pkg.get();
+  pkgContents.devDependencies.prettier = pkgContents.devDependencies.prettier.replace(/[\^~]/, '');
+  pkg.save();
+
 
   // TODO: ask user if `npm run format` should be executed
 
   // TODO: detect whether TypeScript or JavaScript project, use eslint for the latter
   // TODO: print out instructions/infos?
+  // TODO: add prettier upgrade script?
 }
 
 task.description = 'Adds Prettier to a project';
