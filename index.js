@@ -1,6 +1,8 @@
 const { packageJson, install, lines, json } = require('mrm-core');
+const { execSync } = require('child_process');
+const { question } = require('readline-sync');
 
-function task(config) {
+async function task(config) {
   const { sourceDir, distDir, filesPattern } = config
     .defaults({
       sourceDir: 'src',
@@ -44,6 +46,10 @@ function task(config) {
   pkg
     .setScript('format', `prettier --write "${filesPattern}"`)
     .setScript(
+      'format:upgrade',
+      'npm install --save-exact prettier@latest && npm run format'
+    )
+    .setScript(
       'lint:format',
       `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`
     );
@@ -71,17 +77,11 @@ function task(config) {
   /**
    * Deactivate style linting
    */
-  const tslintConfig = json('tslint.json');
-  const currentExtends = tslintConfig.get('extends', []);
-  tslintConfig
-    .set('extends', [
-      ...(Array.isArray(currentExtends) ? currentExtends : [currentExtends]),
-      'tslint-config-prettier'
-    ])
-    .save();
+  pipe(
+    appendTslintConfigPrettierRules,
+    removeTslintStyleRules
+  )(json('tslint.json')).save();
   // TODO: handle .tslintrc, tslint.js etc.
-
-  // TODO: remove style-rules from tslint config (tslint-config-prettier-check)
 
   /**
    * Configure pre-commit hook
@@ -112,11 +112,77 @@ function task(config) {
    */
   pkg.save();
 
-  // TODO: ask user if `npm run format` should be executed
+  if (
+    questionBoolean(
+      'Do you want to re-format your code base using Prettier now?'
+    )
+  ) {
+    execSync('npm run format', { stdio: 'inherit' });
+  }
+
+  console.log(
+    '\nCongratulations, your project will now be formatted using Prettier.\n\n' +
+      'Further steps:\n' +
+      ' * Configure your editor to format on save:\n' +
+      '   https://prettier.io/docs/en/editors.html\n' +
+      " * Execute 'npm run lint:format' in your CI pipeline, to let it fail when ill\n" +
+      '   formatted code is commited.\n' +
+      " * Periodically execute 'npm run format:upgrade' to upgrade Prettier and\n" +
+      '   re-format your code base'
+  );
 
   // TODO: detect whether TypeScript or JavaScript project, use eslint for the latter
-  // TODO: print out instructions/infos?
-  // TODO: add prettier upgrade script?
+  // TODO: detect whether npm or yarn is used
+}
+
+function appendTslintConfigPrettierRules(tslintConfig) {
+  const currentExtends = tslintConfig.get('extends', []);
+  tslintConfig.set('extends', [
+    ...(Array.isArray(currentExtends) ? currentExtends : [currentExtends]),
+    'tslint-config-prettier'
+  ]);
+  return tslintConfig;
+}
+
+function removeTslintStyleRules(tslintConfig) {
+  const styleRules = getTsLintStyleRules();
+  if (styleRules.length > 0) {
+    const currentRules = tslintConfig.get('rules');
+    const filteredRules = Object.keys(currentRules)
+      .filter(rule => !styleRules.includes(rule))
+      .reduce(
+        (result, rule) => ({ ...result, [rule]: currentRules[rule] }),
+        {}
+      );
+    tslintConfig.set('rules', filteredRules);
+  }
+  return tslintConfig;
+}
+
+function getTsLintStyleRules() {
+  let result = '';
+  try {
+    execSync('tslint-config-prettier-check ./tslint.json');
+  } catch (error) {
+    result = error.stderr;
+  }
+  return result
+    ? result
+        .toString()
+        .split('\n')
+        .slice(1)
+        .map(s => s.trim())
+        .filter(Boolean)
+    : [];
+}
+
+function questionBoolean(message) {
+  const response = question(`${message} [Y/n]: `);
+  return (response.trim().toLowerCase() || 'y') === 'y';
+}
+
+function pipe(...fns) {
+  return arg => fns.reduce((acc, cur) => cur(acc), arg);
 }
 
 task.description = 'Adds Prettier to a project';

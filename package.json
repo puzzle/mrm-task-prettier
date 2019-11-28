@@ -9,7 +9,8 @@
   "author": "Mathis Hofer <hofer@puzzle.ch>",
   "license": "MIT",
   "dependencies": {
-    "mrm-core": "^4.0.0"
+    "mrm-core": "^4.0.0",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "prettier": "1.19.1"
