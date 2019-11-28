@@ -33,7 +33,9 @@ function task(config) {
 
   // Fix Prettier to specific version (manual upgrading and
   // re-formating is required)
-  pkg.get().devDependencies.prettier = pkg.get().devDependencies.prettier.replace(/[\^~]/, '');
+  pkg.get().devDependencies.prettier = pkg
+    .get()
+    .devDependencies.prettier.replace(/[\^~]/, '');
   pkg.save();
 
   /**
@@ -41,7 +43,10 @@ function task(config) {
    */
   pkg
     .setScript('format', `prettier --write "${filesPattern}"`)
-    .setScript('lint:format', `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`);
+    .setScript(
+      'lint:format',
+      `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`
+    );
 
   /**
    * Configure Prettier
@@ -66,22 +71,28 @@ function task(config) {
   /**
    * Deactivate style linting
    */
-  // TODO: extend tslint config with 'tslint-config-prettier' ruleset
+  const tslintConfig = json('tslint.json');
+  const currentExtends = tslintConfig.get('extends', []);
+  tslintConfig
+    .set('extends', [
+      ...(Array.isArray(currentExtends) ? currentExtends : [currentExtends]),
+      'tslint-config-prettier'
+    ])
+    .save();
+  // TODO: handle .tslintrc, tslint.js etc.
+
   // TODO: remove style-rules from tslint config (tslint-config-prettier-check)
 
   /**
    * Configure pre-commit hook
    */
   pkg.get().husky = {
-     hooks: {
-         'pre-commit': 'lint-staged'
-     }
+    hooks: {
+      'pre-commit': 'lint-staged'
+    }
   };
   pkg.get()['lint-staged'] = {
-    [filesPattern]: [
-      "prettier --write",
-      "git add"
-    ]
+    [filesPattern]: ['prettier --write', 'git add']
   };
 
   /**

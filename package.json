@@ -10,5 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "mrm-core": "^4.0.0"
+  },
+  "devDependencies": {
+    "prettier": "1.19.1"
   }
 }
