@@ -2,11 +2,32 @@
   "name": "@puzzleitc/mrm-task-prettier",
   "version": "1.0.0",
   "description": "mrm task that adds Prettier to a project following our best practices",
+  "keywords": [
+    "mrm",
+    "mrm-task",
+    "prettier",
+    "format",
+    "formatting"
+  ],
+  "private": false,
   "main": "index.js",
+  "files": [
+    "index.js",
+    "Readme.md",
+    "License.md"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Mathis Hofer <hofer@puzzle.ch>",
+  "homepage": "https://github.com/puzzle/mrm-task-prettier#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/puzzle/mrm-task-prettier"
+  },
+  "bugs": {
+    "url": "https://github.com/puzzle/mrm-task-prettier/issues"
+  },
+  "author": "Mathis Hofer",
   "license": "MIT",
   "dependencies": {
     "mrm-core": "^4.0.0",
