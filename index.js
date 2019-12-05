@@ -3,18 +3,18 @@ const { execSync } = require('child_process');
 const { question } = require('readline-sync');
 
 async function task(config) {
-  const { sourceDir, distDir, filesPattern } = config
+  const { ignores, filesPattern, lintingFilesPattern } = config
     .defaults({
-      sourceDir: 'src',
-      distDir: 'dist',
-      filesPattern: './**/*.{js,ts,json,css,scss,html,md,yaml}'
+      ignores: 'dist',
+      filesPattern: './**/*.{js,ts,json,css,scss,html,md,yaml}',
+      lintingFilesPattern: 'src/**/*.ts'
     })
     .values();
 
   let pkg = packageJson();
 
   if (!pkg.exists()) {
-    throw new Error('No package.json');
+    throw new Error('No package.json found');
   }
 
   if (pkg.get().devDependencies.prettier || pkg.get().dependencies.prettier) {
@@ -51,7 +51,7 @@ async function task(config) {
     )
     .setScript(
       'lint:format',
-      `tslint -c tslint-prettier.json "${sourceDir}/**/*.ts"`
+      `tslint -c tslint-prettier.json "${lintingFilesPattern}"`
     );
 
   /**
@@ -71,7 +71,7 @@ async function task(config) {
     .save();
 
   lines('.prettierignore')
-    .add([distDir])
+    .add([ignores.split(',')])
     .save();
 
   /**
