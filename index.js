@@ -22,18 +22,26 @@ async function task(config) {
     throw new Error('Prettier is already installed');
   }
 
-  const yarn = existsSync('yarn.lock')
+  const yarn = existsSync('yarn.lock');
+
+  const pkgRunCmd = yarn ? 'yarn' : 'npm run';
+  const pkgInstallExactCmd = yarn
+    ? 'yarn add --dev --exact'
+    : 'npm install --save-exact';
 
   /**
    * Install required packages
    */
-  install([
-    'prettier',
-    'lint-staged',
-    'husky',
-    'tslint-config-prettier',
-    'tslint-plugin-prettier'
-  ], { yarn });
+  install(
+    [
+      'prettier',
+      'lint-staged',
+      'husky',
+      'tslint-config-prettier',
+      'tslint-plugin-prettier'
+    ],
+    { yarn }
+  );
   pkg = packageJson(); // Re-read updated package.json
 
   // Fix Prettier to specific version (manual upgrading and
@@ -50,7 +58,7 @@ async function task(config) {
     .setScript('format', `prettier --write "${filesPattern}"`)
     .setScript(
       'format:upgrade',
-      'npm install --save-exact prettier@latest && npm run format'
+      `${pkgInstallExactCmd} prettier@latest && ${pkgRunCmd} format`
     )
     .setScript(
       'lint:format',
@@ -120,19 +128,18 @@ async function task(config) {
       'Do you want to re-format your code base using Prettier now?'
     )
   ) {
-    execSync('npm run format', { stdio: 'inherit' });
+    execSync(`${pkgRunCmd} format`, { stdio: 'inherit' });
   }
 
-  const scriptRunCmd = yarn ? 'yarn' : 'npm run';
   console.log(`
 🎉 Congratulations, your project will now be formatted using Prettier.
 
 Further steps:
  * Configure your editor to format on save:
    https://prettier.io/docs/en/editors.html
- * Execute '${scriptRunCmd} lint:format' in your CI pipeline, to let it fail when ill
+ * Execute '${pkgRunCmd} lint:format' in your CI pipeline, to let it fail when ill
    formatted code is commited.
- * Periodically execute '${scriptRunCmd} format:upgrade' to upgrade Prettier and
+ * Periodically execute '${pkgRunCmd} format:upgrade' to upgrade Prettier and
    re-format your code base`);
 
   // TODO: detect whether TypeScript or JavaScript project, use eslint for the latter
