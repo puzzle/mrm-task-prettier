@@ -1,6 +1,6 @@
 {
   "name": "@puzzleitc/mrm-task-prettier",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "mrm task that adds Prettier to a project following our best practices",
   "keywords": [
     "mrm",
@@ -14,7 +14,8 @@
   "files": [
     "index.js",
     "Readme.md",
-    "License.md"
+    "License.md",
+    "Changelog.md"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
