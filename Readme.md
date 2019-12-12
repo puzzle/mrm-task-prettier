@@ -27,7 +27,6 @@ npx mrm @puzzleitc/mrm-task-prettier
 ## Known issues
 
 - Currently only works with TypeScript projects with TSLint (and `tslint.json` file, not `.tslintrc` or `tslint.js`).
-- Currently only supports NPM, not Yarn.
 
 ## What it does
 

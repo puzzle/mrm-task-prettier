@@ -1,6 +1,7 @@
 const { packageJson, install, lines, json } = require('mrm-core');
 const { execSync } = require('child_process');
 const { question } = require('readline-sync');
+const { existsSync } = require('fs');
 
 async function task(config) {
   const { ignores, filesPattern, lintingFilesPattern } = config
@@ -21,6 +22,8 @@ async function task(config) {
     throw new Error('Prettier is already installed');
   }
 
+  const yarn = existsSync('yarn.lock')
+
   /**
    * Install required packages
    */
@@ -30,7 +33,7 @@ async function task(config) {
     'husky',
     'tslint-config-prettier',
     'tslint-plugin-prettier'
-  ]);
+  ], { yarn });
   pkg = packageJson(); // Re-read updated package.json
 
   // Fix Prettier to specific version (manual upgrading and
@@ -120,19 +123,19 @@ async function task(config) {
     execSync('npm run format', { stdio: 'inherit' });
   }
 
-  console.log(
-    '\nCongratulations, your project will now be formatted using Prettier.\n\n' +
-      'Further steps:\n' +
-      ' * Configure your editor to format on save:\n' +
-      '   https://prettier.io/docs/en/editors.html\n' +
-      " * Execute 'npm run lint:format' in your CI pipeline, to let it fail when ill\n" +
-      '   formatted code is commited.\n' +
-      " * Periodically execute 'npm run format:upgrade' to upgrade Prettier and\n" +
-      '   re-format your code base'
-  );
+  const scriptRunCmd = yarn ? 'yarn' : 'npm run';
+  console.log(`
+🎉 Congratulations, your project will now be formatted using Prettier.
+
+Further steps:
+ * Configure your editor to format on save:
+   https://prettier.io/docs/en/editors.html
+ * Execute '${scriptRunCmd} lint:format' in your CI pipeline, to let it fail when ill
+   formatted code is commited.
+ * Periodically execute '${scriptRunCmd} format:upgrade' to upgrade Prettier and
+   re-format your code base`);
 
   // TODO: detect whether TypeScript or JavaScript project, use eslint for the latter
-  // TODO: detect whether npm or yarn is used
 }
 
 function appendTslintConfigPrettierRules(tslintConfig) {
