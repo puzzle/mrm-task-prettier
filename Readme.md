@@ -1,5 +1,7 @@
 # @puzzleitc/mrm-task-prettier
 
+**⚠️THIS PROJECT IS NO MORE MAINTAINED ⚠️**
+
 [Mrm](https://github.com/sapegin/mrm) task to add the opinionated source code formatter [Prettier](https://prettier.io/) to your project following our best practices.
 
 [Changelog](Changelog.md)
